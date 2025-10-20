@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+    "log"
+    "time"
     logger "github.com/Chelaran/yagalog"
 )
 
@@ -10,7 +11,9 @@ func main() {
 	if err != nil { log.Fatal(err) }
 	defer l.Close()
 
-	l.Info("Hello from YagaLog %d", 1)
+    l.SetLevel(logger.INFO)
+    l.WithTimeFormat(time.RFC3339Nano)
+    l.Info("Hello from YagaLog %d", 1)
 	l.Warning("Be careful")
 	l.Error("Oops: %s", "something went wrong")
 }

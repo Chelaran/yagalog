@@ -15,7 +15,20 @@ Simple, colorful Go logger. Dual output (console + file). Thread‑safe. Zero se
 ## Install last version
 
 ```bash
-go get github.com/Chelaran/yagalog@v0.1.0
+go get github.com/Chelaran/yagalog@v0.2.0
+```
+
+## TL;DR
+
+```go
+import (
+    logger "github.com/Chelaran/yagalog"
+)
+
+l, _ := logger.NewLogger("app.log")
+defer l.Close()
+
+l.Info("Ready!")
 ```
 
 ## Quick start
@@ -41,6 +54,16 @@ func main() {
 - Thread‑safe file writes
 - Lightweight dependency footprint
 
+## Levels
+
+| Level   | Purpose                  |
+|-------- |--------------------------|
+| DEBUG   | подробные события в DEV  |
+| INFO    | обычный поток событий    |
+| WARNING | потенциальные проблемы   |
+| ERROR   | ошибки, но сервис жив    |
+| FATAL   | критично, завершение     |
+
 ## API
 ```go
 // Create new logger writing to given file path
@@ -65,10 +88,52 @@ func (l *Logger) Close() error
 - Go 1.20+ (tested with 1.25.3)
 - OS: Linux/macOS/Windows
 
+## Options (keep it simple)
+
+```go
+// Level filtering
+l.SetLevel(logger.INFO) // drop DEBUG in prod
+
+// Colors
+l.WithColors(true)           // force enable/disable (AUTO by default via TTY/NO_COLOR)
+
+// Time format
+l.WithTimeFormat(time.RFC3339Nano)
+
+// Caller file:line
+l.WithCaller(true)
+
+// JSON to file (single-line per entry)
+l.WithJSON()
+
+// Control file sink
+l.DisableFile()                 // console only
+_ = l.EnableFile("app.log")    // re-enable / switch file
+```
+
 ## Examples
-Run the included example:
+Run any example (more in `examples/`):
 ```bash
-go run ./examples/basic
+go run ./examples/basic    # INFO level, RFC3339Nano time
+go run ./examples/caller   # adds file:line
+go run ./examples/json     # writes JSON lines to app.log
+```
+
+## Best practices
+
+DEV preset
+```go
+l.SetLevel(logger.DEBUG)
+l.WithCaller(true)
+// colors auto (TTY), human‑readable console + file
+```
+
+PROD preset
+```go
+l.SetLevel(logger.INFO)
+l.WithCaller(false)
+l.WithJSON()           // JSON lines to file for aggregators
+// optionally: l.DisableFile() if logs collected from stdout only
 ```
 
 ## Roadmap (short)
