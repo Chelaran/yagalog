@@ -8,21 +8,30 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (no saved creds)
+      - name: Checkout (no saved creds, full history)
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Configure git user
         run: |
           git config user.name "chelaran-sync-bot"
           git config user.email "actions@github.com"
 
+      - name: Ensure full history and tags
+        run: |
+          git fetch --tags --prune
+          # если вдруг репо оказалось shallow
+          git rev-parse --is-shallow-repository && git fetch --unshallow || true
+
       - name: Verify access
         run: |
           git ls-remote https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
 
-      - name: Push master to personal mirror
+      - name: Push master to personal mirror (safe mirror)
         run: |
-          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git HEAD:master
-          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --tags
+          # безопасное точное зеркало ветки master
+          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git +HEAD:master --force-with-lease
+          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --tags --force
+          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --prune
