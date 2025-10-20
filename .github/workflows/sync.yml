@@ -1,5 +1,4 @@
 name: Sync to personal mirror
-
 on:
   push:
     branches: [ master ]
@@ -16,8 +15,8 @@ jobs:
           git config user.name "chelaran-sync-bot"
           git config user.email "actions@github.com"
 
-      - name: Push main to personal mirror
+      - name: Push master to personal mirror
         run: |
-          git remote add personal https://$GITHUB_ACTOR:${{ secrets.PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
+          git remote add personal https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
           git push personal HEAD:master
           git push personal --tags
