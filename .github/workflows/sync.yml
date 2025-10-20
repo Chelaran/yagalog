@@ -19,19 +19,22 @@ jobs:
           git config user.name "chelaran-sync-bot"
           git config user.email "actions@github.com"
 
-      - name: Ensure full history and tags
-        run: |
-          git fetch --tags --prune
-          # если вдруг репо оказалось shallow
-          git rev-parse --is-shallow-repository && git fetch --unshallow || true
-
       - name: Verify access
         run: |
           git ls-remote https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
 
-      - name: Push master to personal mirror (safe mirror)
+      - name: Push master to personal mirror (exclude .github)
         run: |
-          # безопасное точное зеркало ветки master
-          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git +HEAD:master --force-with-lease
-          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --tags --force
-          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --prune
+          rm -rf /tmp/mirror
+          mkdir -p /tmp/mirror
+          git --work-tree=/tmp/mirror checkout -f
+          rm -rf /tmp/mirror/.github
+          cd /tmp/mirror
+          git init
+          git config user.name "chelaran-sync-bot"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "mirror snapshot"
+          git branch -M master
+          git remote add personal https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
+          git push personal master --force
