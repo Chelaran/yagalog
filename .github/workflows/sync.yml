@@ -1,0 +1,23 @@
+name: Sync to personal mirror
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git user
+        run: |
+          git config user.name "chelaran-sync-bot"
+          git config user.email "actions@github.com"
+
+      - name: Push main to personal mirror
+        run: |
+          git remote add personal https://$GITHUB_ACTOR:${{ secrets.PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
+          git push personal HEAD:master
+          git push personal --tags
