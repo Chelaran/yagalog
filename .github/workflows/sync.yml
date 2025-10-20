@@ -1,4 +1,4 @@
-name: Sync to personal mirror
+name: sync
 on:
   push:
     branches: [ master ]
@@ -8,20 +8,21 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (no saved creds)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Configure git user
         run: |
           git config user.name "chelaran-sync-bot"
           git config user.email "actions@github.com"
 
-      - name: Verify access to personal repo
+      - name: Verify access
         run: |
           git ls-remote https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
 
       - name: Push master to personal mirror
         run: |
-          git remote add personal https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git
-          git push personal HEAD:master
-          git push personal --tags
-          
+          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git HEAD:master
+          git push https://bambutcha:${{ secrets.BAMBUTCHA_PERSONAL_TOKEN }}@github.com/bambutcha/yagalog.git --tags
