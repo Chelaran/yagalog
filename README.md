@@ -15,7 +15,7 @@ Simple, colorful Go logger. Dual output (console + file). Thread‑safe. Zero se
 ## Install last version
 
 ```bash
-go get github.com/Chelaran/yagalog@v0.2.0
+go get github.com/Chelaran/yagalog@v0.3.0
 ```
 
 ## TL;DR
@@ -25,8 +25,15 @@ import (
     logger "github.com/Chelaran/yagalog"
 )
 
-l, _ := logger.NewLogger("app.log")
+// console only
+l, _ := logger.NewLogger()
 defer l.Close()
+
+// or with file
+l2, err := logger.NewLogger(logger.WithFilePath("app.log"))
+if err == nil {
+    defer l2.Close()
+}
 
 l.Info("Ready!")
 ```
@@ -37,9 +44,16 @@ l.Info("Ready!")
 import logger "github.com/Chelaran/yagalog"
 
 func main() {
-    l, err := logger.NewLogger("app.log")
+    // console only
+    l, err := logger.NewLogger()
     if err != nil { panic(err) }
     defer l.Close()
+
+    // or with file
+    lf, err := logger.NewLogger(logger.WithFilePath("app.log"))
+    if err == nil {
+        defer lf.Close()
+    }
 
     l.Info("Hello from YagaLog %d", 1)
     l.Warning("Be careful")
@@ -66,8 +80,8 @@ func main() {
 
 ## API
 ```go
-// Create new logger writing to given file path
-func NewLogger(path string) (*Logger, error)
+// Create new logger with functional options
+func NewLogger(opts ...Option) (*Logger, error)
 
 // Logging methods (printf‑style formatting supported)
 func (l *Logger) Debug(msg string, v ...interface{})
@@ -88,28 +102,38 @@ func (l *Logger) Close() error
 - Go 1.20+ (tested with 1.25.3)
 - OS: Linux/macOS/Windows
 
-## Options (keep it simple)
+## Options (functional options API)
 
 ```go
-// Level filtering
-l.SetLevel(logger.INFO) // drop DEBUG in prod
+// Examples using options at construction time or via helpers
 
-// Colors
-l.WithColors(true)           // force enable/disable (AUTO by default via TTY/NO_COLOR)
+// Construction-time options
+lf, _ := logger.NewLogger(
+        logger.WithFilePath("app.log"),
+        logger.WithLevel(logger.INFO),
+        logger.WithJSON(),
+)
+defer lf.Close()
 
-// Time format
-l.WithTimeFormat(time.RFC3339Nano)
+// Runtime helpers remain available
+l.SetLevel(logger.INFO)
+l.WithColors(true) // toggles color output for console
+// or use WithWriter to direct console logs to a custom io.Writer
+buf := &bytes.Buffer{}
+_ = logger.NewLogger(logger.WithWriter(buf))
 
-// Caller file:line
-l.WithCaller(true)
-
-// JSON to file (single-line per entry)
-l.WithJSON()
-
-// Control file sink
-l.DisableFile()                 // console only
-_ = l.EnableFile("app.log")    // re-enable / switch file
+// You can still DisableFile()/EnableFile(path) at runtime
+// to switch file sinks dynamically.
 ```
+
+## Changelog
+
+- v0.3.0 — 2025-11-20
+    - Introduced functional-options API for `NewLogger(opts ...Option)`.
+    - New options: `WithFilePath`, `WithWriter`, `WithLevel`, `WithJSON`, `WithTimeFormat`, `WithCaller`, `WithColors`.
+    - Backwards compatibility: constructor signature changed — replace `NewLogger(path)` with `NewLogger(WithFilePath(path))` or call `NewLogger()` for console-only.
+
+- v0.2.0 — previous
 
 ## Examples
 Run any example (more in `examples/`):
